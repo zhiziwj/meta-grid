@@ -2,7 +2,7 @@
 #define RAND_H
 #include "core.h"
 int rand_dim(){
-	return rand()%(state*2);
+	return rand()%state;
 }
 double distur_rand(){
 	return (double)rand()/RAND_MAX*2.0-1.0;
