@@ -14,14 +14,30 @@ strategy decode(SA_state input){
     ans.p[state]=ans.p[state-1]+input.t[state-1];
     return ans;
 }
-result back_test(std::vector<kline> data,strategy s){
+std::vector<double> calc_ma(const std::vector<kline>& data){
+    std::vector<double> ma(data.size());
+    double sum=0;
+    for(int i=0;i<(int)data.size();i++){
+        sum+=data[i].c;
+        if(i>=ma_period){
+            sum-=data[i-ma_period].c;
+            ma[i]=sum/ma_period;
+        }
+        else{
+            ma[i]=sum/(i+1);
+        }
+    }
+    return ma;
+}
+result back_test(std::vector<kline> data,strategy s,const std::vector<double>* bases=nullptr){
     result ans;
     if(data.empty()){
         return ans;
     }
     double money=init_cash,shares=0;
-    double base=data[0].o;
+    double fixed_base=data[0].o;
     for(int i=0;i<(int)data.size();i++){
+        double base=(bases!=nullptr && i<(int)bases->size()) ? (*bases)[i] : fixed_base;
         double price=data[i].c;
         double norm=price/base;
         double value=0.0,ratio;
@@ -60,6 +76,19 @@ result back_test(std::vector<kline> data,strategy s){
             }
         }
         double cnt=money+shares*price;
+        ans.line.push_back(cnt);
+    }
+    return ans;
+}
+result buy_and_hold(std::vector<kline> data){
+    result ans;
+    if(data.empty()){
+        return ans;
+    }
+    double shares=init_cash/data[0].o*(1.0-FEE);
+    double money=0;
+    for(int i=0;i<(int)data.size();i++){
+        double cnt=money+shares*data[i].c;
         ans.line.push_back(cnt);
     }
     return ans;

@@ -11,6 +11,8 @@
 #define time_unit 365 //according to your data
 const int state=3;//you can change it.
 const double init_cash=1000,FEE=0.001;//you can change it too.
+const int ma_period=20;//moving average period for dynamic base
+const double SPLIT_RATIO=0.7;//ratio of data used for training
 struct kline{
 	std::string t;
 	double o,h,l,c;

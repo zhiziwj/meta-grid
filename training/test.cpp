@@ -91,6 +91,59 @@ void test_back_test_zero_segments(){
     input.t[0]=0.2; input.t[1]=0.3; input.t[2]=0.0;
     test_back_test_zero_segment("t2",input);
 }
+void test_calc_ma(){
+    std::vector<kline> data;
+    for(int i=0;i<30;i++){
+        data.push_back({"",100.0,100.0,100.0,100.0+(double)i});
+    }
+    std::vector<double> ma=calc_ma(data);
+    assert((int)ma.size()==30);
+    assert(fabs(ma[0]-100.0)<1e-9);
+    double sum=0;
+    for(int i=0;i<ma_period;i++){
+        sum+=100.0+i;
+    }
+    assert(fabs(ma[ma_period-1]-sum/ma_period)<1e-9);
+    double ma29_expected=0;
+    for(int i=10;i<30;i++){
+        ma29_expected+=100.0+i;
+    }
+    ma29_expected/=ma_period;
+    assert(fabs(ma[29]-ma29_expected)<1e-9);
+    std::cout<<"[PASS] test_calc_ma"<<std::endl;
+}
+void test_back_test_dynamic(){
+    std::vector<kline> data;
+    data.push_back({"",90.0,95.0,85.0,90.0});
+    data.push_back({"",90.0,95.0,85.0,100.0});
+    data.push_back({"",100.0,105.0,95.0,110.0});
+    data.push_back({"",110.0,115.0,105.0,105.0});
+    SA_state input;
+    input.t[0]=0.2; input.t[1]=0.3; input.t[2]=0.5;
+    input.u[0]=10;  input.u[1]=20;  input.u[2]=30;
+    strategy s=decode(input);
+    std::vector<double> bases=calc_ma(data);
+    result r=back_test(data,s,&bases);
+    assert(r.line.size()==4);
+    assert(r.line.back()>0);
+    std::cout<<"[PASS] test_back_test_dynamic (equity="<<r.line.back()<<")"<<std::endl;
+}
+void test_buy_and_hold(){
+    std::vector<kline> data;
+    data.push_back({"",100.0,105.0,95.0,100.0});
+    data.push_back({"",100.0,105.0,95.0,110.0});
+    data.push_back({"",110.0,115.0,105.0,105.0});
+    result r=buy_and_hold(data);
+    assert(r.line.size()==3);
+    assert(r.line.back()>0);
+    std::cout<<"[PASS] test_buy_and_hold (equity="<<r.line.back()<<")"<<std::endl;
+}
+void test_buy_and_hold_empty(){
+    std::vector<kline> empty;
+    result r=buy_and_hold(empty);
+    assert(r.line.empty());
+    std::cout<<"[PASS] test_buy_and_hold_empty"<<std::endl;
+}
 int main(){
     std::cout<<"=== Running Tests ==="<<std::endl;
     test_decode();
@@ -101,6 +154,10 @@ int main(){
     test_check_zero_start();
     test_check_heavy_loss();
     test_back_test_zero_segments();
+    test_calc_ma();
+    test_back_test_dynamic();
+    test_buy_and_hold();
+    test_buy_and_hold_empty();
     std::cout<<"=== All Tests Passed ==="<<std::endl;
     return 0;
 }
