@@ -1,11 +1,11 @@
 #include "core.h"
 #include "rand.h"
-std::vector<kline> load_data(){
+std::vector<kline> load_data(std::string filename){
     std::vector<kline> ans;
     std::fstream data;
     std::string str;
     double o,h,l,c;
-    data.open("bitc_ohlc.txt");
+    data.open(filename);
     while(data>>str>>o>>h>>l>>c){
         ans.push_back({str,o,h,l,c});
     }
@@ -129,9 +129,13 @@ SA_state SA(std::vector<kline> data){
     return best_ans;
 }
 std::vector<kline> data;
-int main(){
-    data=load_data();
-    std::cout<<"Loaded "<<data.size()<<" bars."<<std::endl;
+int main(int argc,char* argv[]){
+    std::string filename="bitc_ohlc.txt";
+    if(argc>1){
+        filename=argv[1];
+    }
+    data=load_data(filename);
+    std::cout<<"Loaded "<<data.size()<<" bars from "<<filename<<"."<<std::endl;
     std::cout<<"[SA] Starting optimization..."<<std::endl;
     SA_state best_params=SA(data);
     strategy best_s=decode(best_params);
